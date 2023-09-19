@@ -1,6 +1,6 @@
 # Twig components extension
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/performing/twig-components)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/havit/twig-components)
 [![Total Downloads](https://img.shields.io/packagist/dt/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/havit/twig-components)
 
 This is a PHP package for automatically create Twig components as tags. This is highly inspired from Laravel Blade Components.  
