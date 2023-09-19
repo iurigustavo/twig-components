@@ -58,68 +58,6 @@ class TwigComponentsServiceProvider implements ServiceProviderInterface
 
 The components are just Twig templates in a folder of your choice (e.g. `components`) and can be used anywhere in your Twig templates. The slot variable is any content you will add between the opening and the close tag.
 
-```twig
-{# /components/button.twig #}
-<button>
-    {{ slot }}
-</button>
-```
-
-### Custom syntax
-
-To reach a component you need to use custom tag `x` followed by a `:` and the filename of your component.
-
-```twig
-{# /index.twig #}
-{% x:button %}
-    <strong>Click me</strong>
-{% endx %}
-```
-
-You can also pass any params like you would using an `include`. The benefit is that you will have the powerful `attributes` variable to merge attributes or to change your component behaviour.
-
-```twig
-{# /components/button.twig #}
-<button {{ attributes.merge({ class: 'rounded px-4' }) }}>
-    {{ slot }}
-</button>
-
-{# /index.twig #}
-{% x:button with {'class': 'text-white'} %}
-    <strong>Click me</strong>
-{% endx %}
-
-{# Rendered #}
-<button class="text-white rounded-md px-4 py-2">
-    <strong>Click me</strong>
-</button>
-```
-
-To reach components that are in **sub-folders** you can use _dot-notation_ syntax.
-
-```twig
-{# /components/button/primary.twig #}
-<button>
-    {{ slot }}
-</button>
-
-{# /index.twig #}
-{% x:button.primary %}
-    <strong>Click me</strong>
-{% endx %}
-```
-
-### HTML syntax
-
-The same behaviour can be obtained with a special HTML syntax. The previus component example can alse be used in this way.
-
-```twig
-{# /index.twig #}
-<x-button class='bg-blue-600'>
-    <span class="text-lg">Click here!</span>
-</x-button>
-```
-
 ### Named slots
 
 ```twig
