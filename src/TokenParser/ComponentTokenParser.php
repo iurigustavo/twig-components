@@ -1,70 +1,58 @@
 <?php
 
-namespace Performing\TwigComponents\TokenParser;
+namespace Havit\TwigComponents\TokenParser;
 
 use Exception;
-use Performing\TwigComponents\Configuration;
-use Performing\TwigComponents\Node\ComponentNode;
-use Twig\Node\Node;
-use Twig\Token;
+use Havit\TwigComponents\Node\ComponentNode;
+use Havit\TwigComponents\View\AnonymousComponent;
+use Havit\TwigComponents\View\Component;
 use Twig\TokenParser\IncludeTokenParser;
+use Twig_Environment;
+use Twig_Token;
 
 final class ComponentTokenParser extends IncludeTokenParser
 {
-    private Configuration $configuration;
+    /** @var Twig_Environment */
+    private $environment;
+
 
     /**
      * ComponentTokenParser constructor.
-     * @param string $tag
-     * @param string $path
+     *
+     * @param  Twig_Environment  $enviroment
      */
-    public function __construct(Configuration $configuration)
+    public function __construct(Twig_Environment $enviroment)
     {
-        $this->configuration = $configuration;
+        $this->environment = $enviroment;
     }
 
-    public function getComponentPath(string $name)
+    public function parse(Twig_Token $token): \Twig_Node
     {
-        if (strpos($name, '@') === 0) {
-            return $name . '.' . $this->configuration->getTemplatesExtension();
-        }
-
-        $componentPath = rtrim($this->configuration->getTemplatesPath(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $name;
-
-        if ($this->configuration->isUsingTemplatesExtension()) {
-            $componentPath .= '.' . $this->configuration->getTemplatesExtension();
-        }
-
-        return  $componentPath;
-    }
-
-    public function parse(Token $token): Node
-    {
-        list($variables, $name) = $this->parseArguments();
+        [$variables, $name] = $this->parseArguments();
 
         $slot = $this->parser->subparse([$this, 'decideBlockEnd'], true);
 
-        $this->parser->getStream()->expect(Token::BLOCK_END_TYPE);
+        $this->parser->getStream()->expect(Twig_Token::BLOCK_END_TYPE);
 
-        return new ComponentNode($this->getComponentPath($name), $slot, $variables, $token->getLine(), $this->configuration);
+        return new ComponentNode($this->getComponent($name), $slot, $variables, $token->getLine(), $this->environment);
     }
 
     protected function parseArguments()
     {
         $stream = $this->parser->getStream();
 
-        $name = null;
+        $name      = null;
         $variables = null;
 
-        if ($stream->nextIf(Token::PUNCTUATION_TYPE, ':')) {
+        if ($stream->nextIf(Twig_Token::PUNCTUATION_TYPE, ':')) {
             $name = $this->parseComponentName();
         }
 
-        if ($stream->nextIf(/* Token::NAME_TYPE */5, 'with')) {
+        if ($stream->nextIf(/* Token::NAME_TYPE */ 5, 'with')) {
             $variables = $this->parser->getExpressionParser()->parseExpression();
         }
 
-        $stream->expect(/* Token::BLOCK_END_TYPE */3);
+        $stream->expect(/* Token::BLOCK_END_TYPE */ 3);
 
         return [$variables, $name];
     }
@@ -81,14 +69,14 @@ final class ComponentTokenParser extends IncludeTokenParser
 
         $name = $this->getNameSection();
 
-        if ($stream->nextIf(Token::PUNCTUATION_TYPE, ':')) {
-            $path[] = '@' . $name;
-            $name = $this->getNameSection();
+        if ($stream->nextIf(Twig_Token::PUNCTUATION_TYPE, ':')) {
+            $path[] = '@'.$name;
+            $name   = $this->getNameSection();
         }
 
         $path[] = $name;
 
-        while ($stream->nextIf(9 /** Token::PUNCTUATION_TYPE */, '.')) {
+        while ($stream->nextIf(9/** Token::PUNCTUATION_TYPE */, '.')) {
             $path[] = $this->getNameSection();
         }
 
@@ -101,17 +89,43 @@ final class ComponentTokenParser extends IncludeTokenParser
 
         $name = $stream->next()->getValue();
 
-        while ($stream->nextIf(Token::OPERATOR_TYPE, '-')) {
-            $token = $stream->nextIf(Token::NAME_TYPE);
-            if (! is_null($token)) {
-                $name .= '-' . $token->getValue();
+        while ($stream->nextIf(Twig_Token::OPERATOR_TYPE, '-')) {
+            $token = $stream->nextIf(Twig_Token::NAME_TYPE);
+            if (!is_null($token)) {
+                $name .= '-'.$token->getValue();
             }
         }
 
         return $name;
     }
 
-    public function decideBlockEnd(Token $token): bool
+    /**
+     * @throws \ReflectionException
+     */
+    public function getComponent(string $name): Component
+    {
+        $componentClass = AnonymousComponent::class;
+
+        if ($namespace = $this->getComponentsNamespace()) {
+            $name                = str_replace('/', '\\', $name);
+            $guessComponentClass = $namespace.'\\'.implode('\\', array_map(function ($name) {
+                    return ucwords($name);
+                }, explode('\\', $name)));
+
+            if (class_exists($guessComponentClass) && is_subclass_of($guessComponentClass, Component::class)) {
+                $componentClass = $guessComponentClass;
+            }
+        }
+
+        return $componentClass::make()->withName($name)->withEnvironment($this->environment);
+    }
+
+    private function getComponentsNamespace()
+    {
+        return $this->environment->getGlobals()['app']['twig.options']['components']['namespace'];
+    }
+
+    public function decideBlockEnd(Twig_Token $token): bool
     {
         return $token->test('endx');
     }

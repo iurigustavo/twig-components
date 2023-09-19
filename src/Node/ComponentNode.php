@@ -1,27 +1,36 @@
 <?php
 
-namespace Performing\TwigComponents\Node;
+namespace Havit\TwigComponents\Node;
 
-use Performing\TwigComponents\Configuration;
-use Performing\TwigComponents\View\ComponentAttributeBag;
-use Performing\TwigComponents\View\ComponentSlot;
+use Havit\TwigComponents\View\Component;
 use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\ConstantExpression;
+use Twig_Node_Include;
 
-use Twig\Node\IncludeNode;
-use Twig\Node\Node;
-
-final class ComponentNode extends IncludeNode
+final class ComponentNode extends Twig_Node_Include
 {
-    private Configuration $configuration;
+    /** @var \Twig_Environment */
+    private $environment;
 
-    public function __construct(string $path, Node $slot, ?AbstractExpression $variables, int $lineno, Configuration $configuration)
-    {
+    /** @var Component */
+    private $component;
+
+    private $app;
+
+    public function __construct(
+        Component $component,
+        \Twig_Node $slot,
+        ?AbstractExpression $variables,
+        int $lineno,
+        \Twig_Environment $environment
+    ) {
         parent::__construct(new ConstantExpression('not_used', $lineno), $variables, false, false, $lineno, null);
 
-        $this->configuration = $configuration;
-        $this->setAttribute('path', $path);
+        $this->environment = $environment;
+        $this->component   = $component;
+        $this->setAttribute('component', get_class($component));
+        $this->setAttribute('path', $component->template());
         $this->setNode('slot', $slot);
     }
 
@@ -37,37 +46,37 @@ final class ComponentNode extends IncludeNode
 
         $compiler
             ->write(sprintf("if ($%s) {\n", $template))
-            ->write('$slotsStack = $slotsStack ?? [];' . PHP_EOL)
-            ->write('$slotsStack[] = $slots ?? [];' . PHP_EOL)
-            ->write('$slots = [];' . PHP_EOL)
-            ->write("ob_start();"  . PHP_EOL)
+            ->write('$slotsStack = $slotsStack ?? [];'.PHP_EOL)
+            ->write('$slotsStack[] = $slots ?? [];'.PHP_EOL)
+            ->write('$slots = [];'.PHP_EOL)
+            ->write("ob_start();".PHP_EOL)
             ->subcompile($this->getNode('slot'))
-            ->write('$slot = ob_get_clean();' . PHP_EOL)
+            ->write('$slot = ob_get_clean();'.PHP_EOL)
             ->write(sprintf('$%s->display(', $template));
 
         $this->addTemplateArguments($compiler);
 
         $compiler
             ->raw(");\n")
-            ->write('$slots = array_pop($slotsStack);' . PHP_EOL)
+            ->write('$slots = array_pop($slotsStack);'.PHP_EOL)
             ->write("}\n");
     }
 
     protected function addGetTemplate(Compiler $compiler)
     {
         $compiler
-            ->raw('$this->loadTemplate(' . PHP_EOL)
+            ->raw('$this->loadTemplate('.PHP_EOL)
             ->indent(1)
             ->write('')
             ->repr($this->getTemplateName())
-            ->raw(', ' . PHP_EOL)
+            ->raw(', '.PHP_EOL)
             ->write('')
             ->repr($this->getTemplateName())
-            ->raw(', ' . PHP_EOL)
+            ->raw(', '.PHP_EOL)
             ->write('')
             ->repr($this->getTemplateLine())
             ->indent(-1)
-            ->raw(PHP_EOL . ');' . PHP_EOL . PHP_EOL);
+            ->raw(PHP_EOL.');'.PHP_EOL.PHP_EOL);
     }
 
     public function getTemplateName(): ?string
@@ -77,20 +86,16 @@ final class ComponentNode extends IncludeNode
 
     protected function addTemplateArguments(Compiler $compiler)
     {
-        $compiler
-            ->indent(1)
-            ->write("\n")
-            ->write("array_merge(\n")
-            ->write('$slots,' . PHP_EOL);
-
-        if ($this->configuration->isUsingGlobalContext()) {
-            $compiler->write('$context,[');
+        $compiler->write($this->getAttribute('component').'::make('.PHP_EOL);
+        if ($this->hasNode('variables')) {
+            $compiler->subcompile($this->getNode('variables'), true);
         } else {
-            $compiler->write('[');
+            $compiler->raw('[]');
         }
 
-        $compiler->write("'slot' => new  " . ComponentSlot::class . " (\$slot),\n")
-            ->write("'attributes' => new " . ComponentAttributeBag::class . "(");
+        $compiler->write(PHP_EOL.')->getContext($slots, $slot,');
+
+        $compiler->write('$context,');
 
         if ($this->hasNode('variables')) {
             $compiler->subcompile($this->getNode('variables'), true);
@@ -98,16 +103,6 @@ final class ComponentNode extends IncludeNode
             $compiler->raw('[]');
         }
 
-        $compiler->write(")\n")
-            ->indent(-1)
-            ->write("],");
-
-        if ($this->hasNode('variables')) {
-            $compiler->subcompile($this->getNode('variables'), true);
-        } else {
-            $compiler->raw('[]');
-        }
-
-        $compiler->write(")\n");
+        $compiler->write(')');
     }
 }

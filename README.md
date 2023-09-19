@@ -1,8 +1,7 @@
 # Twig components extension
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/performing/twig-components.svg?style=flat-square)](https://packagist.org/packages/performing/twig-components)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/giorgiopogliani/twig-components/Tests)](https://github.com/giorgiopogliani/twig-components/actions?query=workflow%3ATests+branch%3Amaster)
-[![Total Downloads](https://img.shields.io/packagist/dt/performing/twig-components.svg?style=flat-square)](https://packagist.org/packages/performing/twig-components)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/performing/twig-components)
+[![Total Downloads](https://img.shields.io/packagist/dt/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/havit/twig-components)
 
 This is a PHP package for automatically create Twig components as tags. This is highly inspired from Laravel Blade Components.  
 
@@ -11,89 +10,47 @@ This is a PHP package for automatically create Twig components as tags. This is 
 You can install the package via Composer:
 
 ```bash
-composer require performing/twig-components
+composer require havit/twig-components
 ```
 
 ## Configuration
 
-This package should work anywhere where Twig is available.
+This package work only with Silex and PHP 7.1
 
 ```php
-/** @var \Twig\Environment $twig */
+$app['twig.options'] = [
+    'debug'      => true,
+    'cache'      => __DIR__.'/../storage/cache/twig',
+    'components' => [
+        'path'      => 'components',
+        'namespace' => 'App\View',
+    ],
+];
 
-use Performing\TwigComponents\Configuration;
-
-Configuration::make($twig)
-    ->setTemplatesPath('/relative/directory/to/components')
-    ->setTemplatesExtension('twig')
-    ->useCustomTags()
-    ->setup();
+$app->register(new \App\Provider\TwigComponentsServiceProvider());
 ```
 
 To enable the package just pass your Twig environment object to the function and specify your components folder relative to your Twig templates folder.
 
-### Craft CMS
+### SILEX
 
-In Craft CMS you should do something like this.
+Create Provider
 
 ```php
-// Module.php
-if (Craft::$app->request->getIsSiteRequest()) {    
-    Event::on(
-        Plugins::class,
-        Plugins::EVENT_AFTER_LOAD_PLUGINS,
-        function (Event $event) {
-            $twig = Craft::$app->getView()->getTwig();
-            \Performing\TwigComponents\Configuration::make($twig)
-                ->setTemplatesPath('/components')
-                ->useCustomTags()
-                ->setup();
-        }
-    );
-}
-```
+use Pimple\{Container, ServiceProviderInterface};
 
-> The `if` statement ensure you don't get `'Unable to register extension "..." as extensions have already been initialized'` as error.
-
-### Symfony
-
-In Symfony you can do something like this.
-
-```yml
-# services.yml
-
-services:
-    My\Namespace\TwigEnvironmentConfigurator:
-        decorates: 'twig.configurator.environment'
-        arguments: [ '@My\Namespace\TwigEnvironmentConfigurator.inner' ]
-```
-```php
-
-// TwigEnvironmentConfigurator.php
-
-use Symfony\Bundle\TwigBundle\DependencyInjection\Configurator\EnvironmentConfigurator;
-use Twig\Environment;
-use Performing\TwigComponents\Configuration;
-
-final class TwigEnvironmentConfigurator
+class TwigComponentsServiceProvider implements ServiceProviderInterface
 {
-    public function __construct(
-        private EnvironmentConfigurator $decorated
-    ) {}
-
-    public function configure(Environment $environment) : void
+    public function register(Container $app)
     {
-        $this->decorated->configure($environment);
+        $app->extend('twig', function (\Twig_Environment $twig, $app) {
+            $twig->addExtension(new \Havit\TwigComponents\Extension\ComponentExtension($twig));
+            $twig->setLexer(new \Havit\TwigComponents\Lexer\ComponentLexer($twig));
 
-        // Relative path to your components folder
-        $relativePath = '_components'; 
-
-        Configuration::make($environment)
-            ->setTemplatesPath($relativePath)
-            ->setTemplatesExtension('twig')
-            ->useCustomTags()
-            ->setup();
+            return $twig;
+        });
     }
+
 }
 ```
 
@@ -212,15 +169,6 @@ You can pass any attribute to the component in different ways. To interprate the
 </x-button>
 ```
 
-### Twig Namespaces
-
-In addition to the specified directory, you can also reference components from a Twig namespace by prepending the namespace and a `:` to the component name. With a namespace defined like so:
-
-```php
-// register namespace with twig template loader
-$loader->addPath(__DIR__ . '/some/other/dir', 'ns');
-```
-
 Components can be included with the following:
 
 ```twig
@@ -235,17 +183,43 @@ Components can be included with the following:
 </x-ns:button>
 ```
 
+### Component Class
+
+```php
+<?php
+
+namespace App\View;
+
+use App\Application;
+
+class Test extends \Havit\TwigComponents\View\Component
+{
+
+    public $title    = '';
+
+    public function __construct(string $title = 'xyz')
+    {
+        $this->title = $title;
+    }
+
+    public function handle(Application $app)
+    {
+        // Do something
+        $this->title = $app->trans($this->title);
+    }
+
+    public function template(): string
+    {
+        return 'components/test.twig';
+    }
+}
+
 ## Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
-## Testing
-
-```bash
-composer test
-```
 
 ## License
 

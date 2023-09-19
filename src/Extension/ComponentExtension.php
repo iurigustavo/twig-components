@@ -1,26 +1,25 @@
 <?php
 
-namespace Performing\TwigComponents\Extension;
+namespace Havit\TwigComponents\Extension;
 
-use Performing\TwigComponents\Configuration;
-use Performing\TwigComponents\TokenParser\ComponentTokenParser;
+use Havit\TwigComponents\TokenParser\ComponentTokenParser;
+use Havit\TwigComponents\TokenParser\SlotTokenParser;
+use Twig_Extension;
 
-use Performing\TwigComponents\TokenParser\SlotTokenParser;
-use Twig\Extension\AbstractExtension;
-
-class ComponentExtension extends AbstractExtension
+class ComponentExtension extends Twig_Extension
 {
-    private Configuration $configuration;
+    /** @var \Twig_Environment */
+    private $enviroment;
 
-    public function __construct(Configuration $configuration)
+    public function __construct($enviroment)
     {
-        $this->configuration = $configuration;
+        $this->enviroment  = $enviroment;
     }
 
-    public function getTokenParsers()
+    public function getTokenParsers(): array
     {
         return [
-            new ComponentTokenParser($this->configuration),
+            new ComponentTokenParser($this->enviroment),
             new SlotTokenParser(),
         ];
     }

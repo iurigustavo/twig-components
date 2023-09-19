@@ -1,12 +1,11 @@
 <?php
 
-namespace Performing\TwigComponents\Node;
+namespace Havit\TwigComponents\Node;
 
-use Performing\TwigComponents\View\ComponentSlot;
+use Havit\TwigComponents\View\ComponentSlot;
 use Twig\Compiler;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Node;
-
 use Twig\Node\NodeOutputInterface;
 
 final class SlotNode extends Node implements NodeOutputInterface

@@ -1,6 +1,6 @@
 <?php
 
-namespace Performing\TwigComponents\Lexer;
+namespace Havit\TwigComponents\Lexer;
 
 /**
  * Content of this file is mostly taken from Laravel Component Tag Compiler.

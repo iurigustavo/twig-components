@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) Giorgio Pogliani <giorgiopogliani94@gmail.com>
+Copyright (c) 2023 Iúri Gustavo <gustavo.iuri@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

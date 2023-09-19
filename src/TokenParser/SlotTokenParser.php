@@ -1,9 +1,9 @@
 <?php
 
-namespace Performing\TwigComponents\TokenParser;
+namespace Havit\TwigComponents\TokenParser;
 
 use Exception;
-use Performing\TwigComponents\Node\SlotNode;
+use Havit\TwigComponents\Node\SlotNode;
 use Twig\Node\Node;
 use Twig\Token;
 use Twig\TokenParser\IncludeTokenParser;

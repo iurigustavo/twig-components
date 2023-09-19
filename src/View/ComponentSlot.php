@@ -1,13 +1,13 @@
 <?php
 
-namespace Performing\TwigComponents\View;
+namespace Havit\TwigComponents\View;
 
 class ComponentSlot
 {
     /**
      * The slot attribute bag.
      *
-     * @var \Performing\TwigComponents\Component\AttributeBag
+     * @var \Havit\TwigComponents\View\ComponentAttributeBag
      */
     public $attributes;
 
@@ -82,6 +82,6 @@ class ComponentSlot
      */
     public function __toString()
     {
-        return $this->toHtml();
+        return twig_raw_filter($this->toHtml());
     }
 }

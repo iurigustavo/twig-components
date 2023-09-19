@@ -1,6 +1,6 @@
 <?php
 
-namespace Performing\TwigComponents\View;
+namespace Havit\TwigComponents\View;
 
 use ArrayAccess;
 use ArrayIterator;
@@ -191,7 +191,8 @@ class ComponentAttributeBag implements ArrayAccess, IteratorAggregate
      * @param string $offset
      * @return mixed
      */
-    public function offsetGet($offset): mixed
+    #[\ReturnTypeWillChange]
+    public function offsetGet($offset)
     {
         return $this->get($offset);
     }
