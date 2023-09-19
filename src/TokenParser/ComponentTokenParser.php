@@ -99,15 +99,11 @@ final class ComponentTokenParser extends IncludeTokenParser
         return $name;
     }
 
-    /**
-     * @throws \ReflectionException
-     */
     public function getComponent(string $name): Component
     {
         $componentClass = AnonymousComponent::class;
 
         if ($namespace = $this->getComponentsNamespace()) {
-            $name                = str_replace('/', '\\', $name);
             $guessComponentClass = $namespace.'\\'.implode('\\', array_map(function ($name) {
                     return ucwords($name);
                 }, explode('\\', $name)));
@@ -115,6 +111,8 @@ final class ComponentTokenParser extends IncludeTokenParser
             if (class_exists($guessComponentClass) && is_subclass_of($guessComponentClass, Component::class)) {
                 $componentClass = $guessComponentClass;
             }
+        } else {
+            $name = str_replace('\\', '/', $name);
         }
 
         return $componentClass::make()->withName($name)->withEnvironment($this->environment);
