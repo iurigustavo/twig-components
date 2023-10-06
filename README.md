@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/havit/twig-components)
 [![Total Downloads](https://img.shields.io/packagist/dt/havit/twig-components.svg?style=flat-square)](https://packagist.org/packages/havit/twig-components)
 
-This is a PHP package for automatically create Twig components as tags. This is highly inspired from Laravel Blade Components.  
+This is a PHP package for automatically create Twig components as tags. This is highly inspired from Laravel Blade Components.
 
 ## Installation
 
@@ -56,7 +56,8 @@ class TwigComponentsServiceProvider implements ServiceProviderInterface
 
 ## Usage
 
-The components are just Twig templates in a folder of your choice (e.g. `components`) and can be used anywhere in your Twig templates. The slot variable is any content you will add between the opening and the close tag.
+The components are just Twig templates in a folder of your choice (e.g. `components`) and can be used anywhere in your Twig templates. The slot variable is any
+content you will add between the opening and the close tag.
 
 ### Named slots
 
@@ -94,31 +95,39 @@ Also with the standard syntax.
 
 ### Attributes
 
-You can pass any attribute to the component in different ways. To interprate the content as Twig you need to prepend the attribute name with a `:` but it works also in other ways.
+You can pass any attribute to the component in different ways. To interprate the content as Twig you need to prepend the attribute name with a `:` but it works
+also in other ways.
+
+snake-case variables will be converted to kebabCase
+
+Call
 
 ```twig
 <x-button 
-    :any="'evaluate' ~ 'twig'"
-    other="{{'this' ~ 'works' ~ 'too'}}" 
-    another="or this"
+    :class="'btn-' ~ 'success'"
+    type="{{'this' ~ 'works' ~ 'too'}}" 
+    action="or this"
     this="{{'this' ~ 'does'}}{{ 'not work' }}"
+    data-key="foo"
 >
     Submit
 </x-button>
 ```
 
-Components can be included with the following:
+Component
 
 ```twig
-{% x:ns:button with {class:'bg-blue-600'} %}
-    <span class="text-lg">Click here!</span>
-{% endx %}
+<a href="{{ action }}" {{ attributes.class('btn btn-sm me-3') }} data-type="{{ type }}" data-key="{{ dataKey }}">
+    {{ $slot }}
+</a>
+```
 
-{# or #}
+Compiled
 
-<x-ns:button class='bg-blue-600'>
-    <span class="text-lg">Click here!</span>
-</x-ns:button>
+```html
+<a href="or this" class="btn btn-sm me-3 btn-success" data-type="thisworkstoo" data-key="foo">
+    Submit
+</a>
 ```
 
 ### Component Class

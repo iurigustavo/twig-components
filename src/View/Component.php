@@ -29,6 +29,8 @@ abstract class Component
     {
         $parameters = static::extractConstructorParameters();
 
+        $data = self::parseAttributes($data);
+
         if (static::class === AnonymousComponent::class) {
             return new static($data);
         }
@@ -105,6 +107,8 @@ abstract class Component
             $this->handle($globalContext['app']);
         }
 
+        $variables = self::parseAttributes($variables);
+
         $context = array_merge($context, $globalContext);
         $context = array_merge($context, $slots);
         $context = array_merge($context, $variables);
@@ -119,6 +123,24 @@ abstract class Component
         $context['attributes'] = new ComponentAttributeBag($variables);
 
         return $context;
+    }
+
+    public static function parseAttributes($data = [])
+    {
+        if (empty($data)) {
+            return $data;
+        }
+
+        array_walk(
+            $data,
+            function (&$val, $key) use (&$desired_output) {
+                $str                  = str_replace(' ', '', ucwords(str_replace('-', ' ', $key)));
+                $str[0]               = strtolower($str[0]);
+                $desired_output[$str] = $val;
+            }
+        );
+
+        return $desired_output;
     }
 
     abstract public function template(): string;
