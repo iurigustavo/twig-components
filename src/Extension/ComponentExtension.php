@@ -4,16 +4,15 @@ namespace Havit\TwigComponents\Extension;
 
 use Havit\TwigComponents\TokenParser\ComponentTokenParser;
 use Havit\TwigComponents\TokenParser\SlotTokenParser;
-use Twig_Extension;
 
-class ComponentExtension extends Twig_Extension
+class ComponentExtension extends \Twig\Extension\AbstractExtension
 {
-    /** @var \Twig_Environment */
+    /** @var \Twig\Environment */
     private $enviroment;
 
     public function __construct($enviroment)
     {
-        $this->enviroment  = $enviroment;
+        $this->enviroment = $enviroment;
     }
 
     public function getTokenParsers(): array

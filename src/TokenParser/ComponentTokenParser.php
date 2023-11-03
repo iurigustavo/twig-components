@@ -6,33 +6,34 @@ use Exception;
 use Havit\TwigComponents\Node\ComponentNode;
 use Havit\TwigComponents\View\AnonymousComponent;
 use Havit\TwigComponents\View\Component;
+use Twig\Environment;
+use Twig\Node\Node;
+use Twig\Token;
 use Twig\TokenParser\IncludeTokenParser;
-use Twig_Environment;
-use Twig_Token;
 
 final class ComponentTokenParser extends IncludeTokenParser
 {
-    /** @var Twig_Environment */
+    /** @var Environment */
     private $environment;
 
 
     /**
      * ComponentTokenParser constructor.
      *
-     * @param  Twig_Environment  $enviroment
+     * @param  Environment  $enviroment
      */
-    public function __construct(Twig_Environment $enviroment)
+    public function __construct(Environment $enviroment)
     {
         $this->environment = $enviroment;
     }
 
-    public function parse(Twig_Token $token): \Twig_Node
+    public function parse(Token $token): Node
     {
         [$variables, $name] = $this->parseArguments();
 
         $slot = $this->parser->subparse([$this, 'decideBlockEnd'], true);
 
-        $this->parser->getStream()->expect(Twig_Token::BLOCK_END_TYPE);
+        $this->parser->getStream()->expect(Token::BLOCK_END_TYPE);
 
         return new ComponentNode($this->getComponent($name), $slot, $variables, $token->getLine(), $this->environment);
     }
@@ -44,7 +45,7 @@ final class ComponentTokenParser extends IncludeTokenParser
         $name      = null;
         $variables = null;
 
-        if ($stream->nextIf(Twig_Token::PUNCTUATION_TYPE, ':')) {
+        if ($stream->nextIf(Token::PUNCTUATION_TYPE, ':')) {
             $name = $this->parseComponentName();
         }
 
@@ -69,8 +70,8 @@ final class ComponentTokenParser extends IncludeTokenParser
 
         $name = $this->getNameSection();
 
-        if ($stream->nextIf(Twig_Token::PUNCTUATION_TYPE, ':')) {
-            $path[] = '@'.$name;
+        if ($stream->nextIf(Token::PUNCTUATION_TYPE, ':')) {
+            $path[] = '@' . $name;
             $name   = $this->getNameSection();
         }
 
@@ -89,10 +90,10 @@ final class ComponentTokenParser extends IncludeTokenParser
 
         $name = $stream->next()->getValue();
 
-        while ($stream->nextIf(Twig_Token::OPERATOR_TYPE, '-')) {
-            $token = $stream->nextIf(Twig_Token::NAME_TYPE);
+        while ($stream->nextIf(Token::OPERATOR_TYPE, '-')) {
+            $token = $stream->nextIf(Token::NAME_TYPE);
             if (!is_null($token)) {
-                $name .= '-'.$token->getValue();
+                $name .= '-' . $token->getValue();
             }
         }
 
@@ -104,7 +105,7 @@ final class ComponentTokenParser extends IncludeTokenParser
         $componentClass = AnonymousComponent::class;
 
         if ($namespace = $this->getComponentsNamespace()) {
-            $guessComponentClass = $namespace.'\\'.implode('\\', array_map(function ($name) {
+            $guessComponentClass = $namespace . '\\' . implode('\\', array_map(function ($name) {
                     return ucwords($name);
                 }, explode('\\', $name)));
 
@@ -123,7 +124,7 @@ final class ComponentTokenParser extends IncludeTokenParser
         return $this->environment->getGlobals()['app']['twig.options']['components']['namespace'];
     }
 
-    public function decideBlockEnd(Twig_Token $token): bool
+    public function decideBlockEnd(Token $token): bool
     {
         return $token->test('endx');
     }

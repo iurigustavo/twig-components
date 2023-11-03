@@ -251,6 +251,7 @@ class ComponentAttributeBag implements ArrayAccess, IteratorAggregate
             $string .= ' ' . $key . '="' . str_replace('"', '\\"', trim($value)) . '"';
         }
 
+
         return trim($string);
     }
 }

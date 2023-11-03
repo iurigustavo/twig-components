@@ -13,7 +13,7 @@ abstract class Component
     /** @var string|null */
     protected $name = null;
 
-    /** @var \Twig_Environment|null */
+    /** @var \Twig\Environment|null */
     protected $environment = null;
 
     protected $app = null;
@@ -24,6 +24,7 @@ abstract class Component
      * @param  array  $data
      *
      * @return static
+     * @throws \ReflectionException
      */
     public static function make($data = [])
     {
@@ -80,6 +81,24 @@ abstract class Component
 //        return static::$constructorParametersCache[static::class];
     }
 
+    public static function parseAttributes($data = [])
+    {
+        if (empty($data)) {
+            return $data;
+        }
+
+        array_walk(
+            $data,
+            function (&$val, $key) use (&$desired_output) {
+                $str                  = str_replace(' ', '', ucwords(str_replace('-', ' ', $key)));
+                $str[0]               = strtolower($str[0]);
+                $desired_output[$str] = $val;
+            }
+        );
+
+        return $desired_output;
+    }
+
     public function getTemplatePath()
     {
         return $this->environment->getGlobals()['app']['twig.options']['components']['path'];
@@ -123,24 +142,6 @@ abstract class Component
         $context['attributes'] = new ComponentAttributeBag($variables);
 
         return $context;
-    }
-
-    public static function parseAttributes($data = [])
-    {
-        if (empty($data)) {
-            return $data;
-        }
-
-        array_walk(
-            $data,
-            function (&$val, $key) use (&$desired_output) {
-                $str                  = str_replace(' ', '', ucwords(str_replace('-', ' ', $key)));
-                $str[0]               = strtolower($str[0]);
-                $desired_output[$str] = $val;
-            }
-        );
-
-        return $desired_output;
     }
 
     abstract public function template(): string;

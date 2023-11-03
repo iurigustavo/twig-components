@@ -2,20 +2,22 @@
 
 namespace Havit\TwigComponents\Lexer;
 
-use Twig_Source;
+use Twig\Lexer;
+use Twig\Source;
+use Twig\TokenStream;
 
-class ComponentLexer extends \Twig_Lexer
+class ComponentLexer extends Lexer
 {
 
     /**
-     * @throws \Twig_Error_Syntax
+     * @throws \Twig\Error\SyntaxError
      */
-    public function tokenize(Twig_Source $source): \Twig_TokenStream
+    public function tokenize(Source $source): TokenStream
     {
         $preparsed = $this->preparse($source->getCode());
 
         return parent::tokenize(
-            new Twig_Source(
+            new Source(
                 $preparsed,
                 $source->getName(),
                 $source->getPath()

@@ -4,13 +4,15 @@ namespace Havit\TwigComponents\Node;
 
 use Havit\TwigComponents\View\Component;
 use Twig\Compiler;
+use Twig\Environment;
 use Twig\Node\Expression\AbstractExpression;
 use Twig\Node\Expression\ConstantExpression;
-use Twig_Node_Include;
+use Twig\Node\IncludeNode;
+use Twig\Node\Node;
 
-final class ComponentNode extends Twig_Node_Include
+final class ComponentNode extends IncludeNode
 {
-    /** @var \Twig_Environment */
+    /** @var Environment */
     private $environment;
 
     /** @var Component */
@@ -20,10 +22,10 @@ final class ComponentNode extends Twig_Node_Include
 
     public function __construct(
         Component $component,
-        \Twig_Node $slot,
+        Node $slot,
         ?AbstractExpression $variables,
         int $lineno,
-        \Twig_Environment $environment
+        Environment $environment
     ) {
         parent::__construct(new ConstantExpression('not_used', $lineno), $variables, false, false, $lineno, null);
 
@@ -46,37 +48,37 @@ final class ComponentNode extends Twig_Node_Include
 
         $compiler
             ->write(sprintf("if ($%s) {\n", $template))
-            ->write('$slotsStack = $slotsStack ?? [];'.PHP_EOL)
-            ->write('$slotsStack[] = $slots ?? [];'.PHP_EOL)
-            ->write('$slots = [];'.PHP_EOL)
-            ->write("ob_start();".PHP_EOL)
+            ->write('$slotsStack = $slotsStack ?? [];' . PHP_EOL)
+            ->write('$slotsStack[] = $slots ?? [];' . PHP_EOL)
+            ->write('$slots = [];' . PHP_EOL)
+            ->write("ob_start();" . PHP_EOL)
             ->subcompile($this->getNode('slot'))
-            ->write('$slot = ob_get_clean();'.PHP_EOL)
+            ->write('$slot = ob_get_clean();' . PHP_EOL)
             ->write(sprintf('$%s->display(', $template));
 
         $this->addTemplateArguments($compiler);
 
         $compiler
             ->raw(");\n")
-            ->write('$slots = array_pop($slotsStack);'.PHP_EOL)
+            ->write('$slots = array_pop($slotsStack);' . PHP_EOL)
             ->write("}\n");
     }
 
     protected function addGetTemplate(Compiler $compiler)
     {
         $compiler
-            ->raw('$this->loadTemplate('.PHP_EOL)
+            ->raw('$this->loadTemplate(' . PHP_EOL)
             ->indent(1)
             ->write('')
             ->repr($this->getTemplateName())
-            ->raw(', '.PHP_EOL)
+            ->raw(', ' . PHP_EOL)
             ->write('')
             ->repr($this->getTemplateName())
-            ->raw(', '.PHP_EOL)
+            ->raw(', ' . PHP_EOL)
             ->write('')
             ->repr($this->getTemplateLine())
             ->indent(-1)
-            ->raw(PHP_EOL.');'.PHP_EOL.PHP_EOL);
+            ->raw(PHP_EOL . ');' . PHP_EOL . PHP_EOL);
     }
 
     public function getTemplateName(): ?string
@@ -86,14 +88,14 @@ final class ComponentNode extends Twig_Node_Include
 
     protected function addTemplateArguments(Compiler $compiler)
     {
-        $compiler->write($this->getAttribute('component').'::make('.PHP_EOL);
+        $compiler->write($this->getAttribute('component') . '::make(' . PHP_EOL);
         if ($this->hasNode('variables')) {
             $compiler->subcompile($this->getNode('variables'), true);
         } else {
             $compiler->raw('[]');
         }
 
-        $compiler->write(PHP_EOL.')->getContext($slots, $slot,');
+        $compiler->write(PHP_EOL . ')->getContext($slots, $slot,');
 
         $compiler->write('$context,');
 
