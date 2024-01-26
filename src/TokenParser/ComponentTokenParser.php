@@ -106,8 +106,8 @@ final class ComponentTokenParser extends IncludeTokenParser
 
         if ($namespace = $this->getComponentsNamespace()) {
             $guessComponentClass = $namespace . '\\' . implode('\\', array_map(function ($name) {
-                    return ucwords($name);
-                }, explode('\\', $name)));
+                    return ucwords($this->dashesToCamelCase($name));
+                }, explode('/', $name)));
 
             if (class_exists($guessComponentClass) && is_subclass_of($guessComponentClass, Component::class)) {
                 $componentClass = $guessComponentClass;
@@ -133,4 +133,17 @@ final class ComponentTokenParser extends IncludeTokenParser
     {
         return 'x';
     }
+
+    private function dashesToCamelCase($string, $capitalizeFirstCharacter = false)
+    {
+
+        $str = str_replace(' ', '', ucwords(str_replace('-', ' ', $string)));
+
+        if (!$capitalizeFirstCharacter) {
+            $str[0] = strtolower($str[0]);
+        }
+
+        return $str;
+    }
+
 }

@@ -48,19 +48,21 @@ final class ComponentNode extends IncludeNode
 
         $compiler
             ->write(sprintf("if ($%s) {\n", $template))
+            ->indent(1)
             ->write('$slotsStack = $slotsStack ?? [];' . PHP_EOL)
             ->write('$slotsStack[] = $slots ?? [];' . PHP_EOL)
             ->write('$slots = [];' . PHP_EOL)
             ->write("ob_start();" . PHP_EOL)
             ->subcompile($this->getNode('slot'))
             ->write('$slot = ob_get_clean();' . PHP_EOL)
-            ->write(sprintf('$%s->display(', $template));
+            ->write(sprintf('$%s->display(' . PHP_EOL, $template));
 
         $this->addTemplateArguments($compiler);
 
         $compiler
             ->raw(");\n")
             ->write('$slots = array_pop($slotsStack);' . PHP_EOL)
+            ->indent(-1)
             ->write("}\n");
     }
 
@@ -77,8 +79,9 @@ final class ComponentNode extends IncludeNode
             ->raw(', ' . PHP_EOL)
             ->write('')
             ->repr($this->getTemplateLine())
+            ->raw(PHP_EOL)
             ->indent(-1)
-            ->raw(PHP_EOL . ');' . PHP_EOL . PHP_EOL);
+            ->write(');' . PHP_EOL . PHP_EOL);
     }
 
     public function getTemplateName(): ?string
@@ -88,23 +91,24 @@ final class ComponentNode extends IncludeNode
 
     protected function addTemplateArguments(Compiler $compiler)
     {
+        $compiler->indent(1);
         $compiler->write($this->getAttribute('component') . '::make(' . PHP_EOL);
+        $compiler->write('');
+        if ($this->hasNode('variables')) {
+            $compiler->subcompile($this->getNode('variables'), true);
+        } else {
+            $compiler->raw('[]');
+        }
+        $compiler->write(PHP_EOL);
+        $compiler->write(')->getContext($slots, $slot, $context, ');
+
         if ($this->hasNode('variables')) {
             $compiler->subcompile($this->getNode('variables'), true);
         } else {
             $compiler->raw('[]');
         }
 
-        $compiler->write(PHP_EOL . ')->getContext($slots, $slot,');
-
-        $compiler->write('$context,');
-
-        if ($this->hasNode('variables')) {
-            $compiler->subcompile($this->getNode('variables'), true);
-        } else {
-            $compiler->raw('[]');
-        }
-
-        $compiler->write(')');
+        $compiler->raw(')');
+        $compiler->indent(-1);
     }
 }
